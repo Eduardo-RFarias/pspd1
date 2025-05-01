@@ -1,0 +1,23 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.card {
+  border-radius: 10px;
+  overflow: hidden;
+  border: none;
+}
+
+.card-header {
+  background-color: #e30613;
+}
+
+.btn-light {
+  font-weight: bold;
+}
+
+.card-title {
+  color: #e30613;
+}

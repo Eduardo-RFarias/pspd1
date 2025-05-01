@@ -78,3 +78,12 @@ python -m grpc_tools.protoc \
 
 The AI server provides medical diagnosis through a gRPC interface. It accepts patient history and symptoms, then uses OpenAI to generate a diagnosis response.
 
+## AsyncIO Implementation
+
+The server now uses AsyncIO for improved performance and concurrency:
+
+- Uses gRPC's AsyncIO API to handle requests without blocking
+- Leverages OpenAI's AsyncIO client for non-blocking API calls
+- Provides better resource utilization and scalability
+- Can handle more concurrent connections without degrading performance
+

@@ -1,0 +1,86 @@
+<div class="container">
+  <div class="row justify-content-center mt-5">
+    <div class="col-md-6 col-lg-4">
+      <div class="card border-0 shadow">
+        <div class="card-header text-center text-white">
+          <h4>MediChat</h4>
+          <p class="mb-0">Sua plataforma de chat médico</p>
+        </div>
+        <div class="card-body">
+          <div *ngIf="loginError" class="alert alert-danger" role="alert">
+            {{ loginError }}
+          </div>
+          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+            <div class="mb-3">
+              <label for="username" class="form-label">Nome de Usuário</label>
+              <input
+                type="text"
+                class="form-control"
+                id="username"
+                formControlName="username"
+                placeholder="Digite seu nome de usuário"
+              />
+              <div
+                *ngIf="
+                  loginForm.get('username')?.invalid &&
+                  loginForm.get('username')?.touched
+                "
+                class="text-danger"
+              >
+                Nome de usuário é obrigatório
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="password" class="form-label">Senha</label>
+              <input
+                type="password"
+                class="form-control"
+                id="password"
+                formControlName="password"
+                placeholder="Digite sua senha"
+              />
+              <div
+                *ngIf="
+                  loginForm.get('password')?.invalid &&
+                  loginForm.get('password')?.touched
+                "
+                class="text-danger"
+              >
+                <span *ngIf="loginForm.get('password')?.errors?.['required']">
+                  Senha é obrigatória
+                </span>
+                <span *ngIf="loginForm.get('password')?.errors?.['minlength']">
+                  Senha deve ter pelo menos 6 caracteres
+                </span>
+              </div>
+            </div>
+
+            <div class="d-grid">
+              <button
+                type="submit"
+                class="btn btn-danger"
+                [disabled]="loginForm.invalid || isLoading"
+              >
+                <span
+                  *ngIf="isLoading"
+                  class="spinner-border spinner-border-sm me-2"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
+                {{ isLoading ? "Entrando..." : "Entrar" }}
+              </button>
+            </div>
+
+            <div class="text-center mt-3">
+              <p class="mb-0">
+                Não tem uma conta?
+                <a routerLink="/register" class="text-danger">Cadastre-se</a>
+              </p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

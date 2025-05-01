@@ -1,0 +1,84 @@
+<div class="chat-container">
+  <div class="chat-header">
+    <div class="d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center">
+        <button (click)="goToHome()" class="btn btn-link text-white me-2">
+          <i class="bi bi-arrow-left"></i>
+        </button>
+        <h4 class="mb-0">MediChat</h4>
+      </div>
+      <button (click)="clearChat()" class="btn btn-outline-light btn-sm">
+        <i class="bi bi-trash"></i> Limpar
+      </button>
+    </div>
+  </div>
+
+  <div class="chat-messages" #chatContainer>
+    <div class="welcome-message" *ngIf="(messages$ | async)?.length === 0">
+      <div class="text-center p-4">
+        <i class="bi bi-person-badge-fill doctor-icon mb-3 fs-1"></i>
+        <h5>Bem-vindo ao MediChat</h5>
+        <p>
+          Descreva seus sintomas para que eu possa ajudar a diagnosticar seu
+          problema.
+        </p>
+      </div>
+    </div>
+
+    <ng-container *ngFor="let message of messages$ | async">
+      <div
+        class="message"
+        [ngClass]="{
+          'user-message': message.role === 'user',
+          'assistant-message': message.role === 'assistant'
+        }"
+      >
+        <div class="message-content">
+          <div
+            [ngClass]="{
+              'user-bubble': message.role === 'user',
+              'assistant-bubble': message.role === 'assistant'
+            }"
+          >
+            {{ message.content }}
+          </div>
+          <div class="message-time">
+            {{ formatDate(message.timestamp) }}
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+
+  <div class="typing-indicator" *ngIf="isLoading">
+    <div class="typing-dot"></div>
+    <div class="typing-dot"></div>
+    <div class="typing-dot"></div>
+  </div>
+
+  <div class="error-message" *ngIf="error">
+    <div class="alert alert-danger">
+      {{ error }}
+    </div>
+  </div>
+
+  <div class="chat-input">
+    <form [formGroup]="messageForm" (ngSubmit)="sendMessage()">
+      <div class="input-group">
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Descreva seus sintomas..."
+          formControlName="message"
+        />
+        <button
+          class="btn btn-danger"
+          type="submit"
+          [disabled]="messageForm.invalid || isLoading"
+        >
+          <i class="bi bi-send"></i>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

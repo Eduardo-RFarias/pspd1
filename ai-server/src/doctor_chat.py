@@ -1,12 +1,12 @@
 import logging
 
-from openai import OpenAI
+from openai import AsyncOpenAI
 from openai.types.responses import Response
 
 
 class DoctorChat:
     def __init__(self):
-        self.client = OpenAI()
+        self.client = AsyncOpenAI()
         self.logger = logging.getLogger(__name__)
 
         self.system_prompt = """
@@ -30,13 +30,13 @@ class DoctorChat:
         self.temperature = 0.2
         self.logger.info(f"DoctorChat initialized with model: {self.model}")
 
-    def diagnose(self, history: str, symptoms: str) -> Response:
+    async def diagnose(self, history: str, symptoms: str) -> Response:
         self.logger.info(
             f"Processing diagnosis request with symptoms length: {len(symptoms)}"
         )
 
         try:
-            response = self.client.responses.create(
+            response = await self.client.responses.create(
                 model=self.model,
                 instructions=self.system_prompt.format(history=history),
                 input=symptoms,

@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"unb.br/web-server/src/grpc"
 )
@@ -51,10 +52,19 @@ type AuthResponse struct {
 	Token string `json:"token"`
 }
 
+// PatientInfo represents a patient info
+type PatientInfo struct {
+	Name   string  `json:"name"`
+	Age    int32   `json:"age"`
+	Gender string  `json:"gender"`
+	Weight float32 `json:"weight"`
+	Height float32 `json:"height"`
+}
+
 // PatientInfoRequest represents a patient info save request
 type PatientInfoRequest struct {
-	Token   string           `json:"token" binding:"required"`
-	Patient grpc.PatientInfo `json:"patient" binding:"required"`
+	Token   string      `json:"token" binding:"required"`
+	Patient PatientInfo `json:"patient" binding:"required"`
 }
 
 // PatientInfoResponse represents a patient info response
@@ -64,7 +74,7 @@ type PatientInfoResponse struct {
 
 // GetPatientResponse represents a get patient response
 type GetPatientResponse struct {
-	Patient grpc.PatientInfo `json:"patient"`
+	Patient PatientInfo `json:"patient"`
 }
 
 // NewServer creates a new HTTP server
@@ -97,6 +107,16 @@ func (s *Server) setupRoutes() {
 	// Add logging middleware
 	s.router.Use(s.loggerMiddleware())
 
+	// Add CORS middleware
+	s.router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+
 	// API routes
 	api := s.router.Group("/api")
 	{
@@ -106,19 +126,6 @@ func (s *Server) setupRoutes() {
 		api.GET("/patient", s.handleGetPatient)
 		api.POST("/patient", s.handleSavePatient)
 	}
-
-	// Serve static files from public folder
-	s.router.Static("/", "./public")
-
-	// Serve index.html for the root path
-	s.router.GET("/", func(c *gin.Context) {
-		c.File("./public/index.html")
-	})
-
-	// Fallback route for SPA
-	s.router.NoRoute(func(c *gin.Context) {
-		c.File("./public/index.html")
-	})
 }
 
 // initClients initializes the gRPC clients
@@ -180,8 +187,7 @@ func (s *Server) loggerMiddleware() gin.HandlerFunc {
 		method := c.Request.Method
 		statusCode := c.Writer.Status()
 
-		s.accessLogger.Printf("%s | %3d | %13v | %15s | %s %s",
-			statusCode,
+		s.accessLogger.Printf("%3d | %13v | %15s | %s %s",
 			statusCode,
 			latency,
 			clientIP,
@@ -269,7 +275,7 @@ func (s *Server) handleChat(c *gin.Context) {
 	s.accessLogger.Printf("Chat request with symptoms: %s", req.Symptoms)
 
 	// Verify the token and get patient info
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*20)
 	defer cancel()
 
 	getPatientInput := grpc.GetPatientInput{
@@ -335,7 +341,13 @@ func (s *Server) handleGetPatient(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, GetPatientResponse{
-		Patient: getPatientOutput.PatientInfo,
+		Patient: PatientInfo{
+			Name:   getPatientOutput.PatientInfo.Name,
+			Age:    getPatientOutput.PatientInfo.Age,
+			Gender: getPatientOutput.PatientInfo.Gender,
+			Weight: getPatientOutput.PatientInfo.Weight,
+			Height: getPatientOutput.PatientInfo.Height,
+		},
 	})
 }
 
@@ -356,8 +368,14 @@ func (s *Server) handleSavePatient(c *gin.Context) {
 
 	// Call the gRPC service
 	savePatientInput := grpc.SavePatientInfoInput{
-		Token:       req.Token,
-		PatientInfo: req.Patient,
+		Token: req.Token,
+		PatientInfo: grpc.PatientInfo{
+			Name:   req.Patient.Name,
+			Age:    req.Patient.Age,
+			Gender: req.Patient.Gender,
+			Weight: req.Patient.Weight,
+			Height: req.Patient.Height,
+		},
 	}
 
 	savePatientOutput, err := s.dbClient.SavePatientInfo(ctx, savePatientInput)

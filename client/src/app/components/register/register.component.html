@@ -1,0 +1,130 @@
+<div class="container">
+  <div class="row justify-content-center mt-5">
+    <div class="col-md-6 col-lg-4">
+      <div class="card border-0 shadow">
+        <div class="card-header text-center text-white">
+          <h4>MediChat</h4>
+          <p class="mb-0">Cadastro de novo usuário</p>
+        </div>
+        <div class="card-body">
+          <div *ngIf="registerError" class="alert alert-danger" role="alert">
+            {{ registerError }}
+          </div>
+          <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+            <div class="mb-3">
+              <label for="username" class="form-label">Nome de Usuário</label>
+              <input
+                type="text"
+                class="form-control"
+                id="username"
+                formControlName="username"
+                placeholder="Escolha um nome de usuário"
+              />
+              <div
+                *ngIf="
+                  registerForm.get('username')?.invalid &&
+                  registerForm.get('username')?.touched
+                "
+                class="text-danger"
+              >
+                <span
+                  *ngIf="registerForm.get('username')?.errors?.['required']"
+                >
+                  Nome de usuário é obrigatório
+                </span>
+                <span
+                  *ngIf="registerForm.get('username')?.errors?.['minlength']"
+                >
+                  Nome de usuário deve ter pelo menos 3 caracteres
+                </span>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="password" class="form-label">Senha</label>
+              <input
+                type="password"
+                class="form-control"
+                id="password"
+                formControlName="password"
+                placeholder="Digite sua senha"
+              />
+              <div
+                *ngIf="
+                  registerForm.get('password')?.invalid &&
+                  registerForm.get('password')?.touched
+                "
+                class="text-danger"
+              >
+                <span
+                  *ngIf="registerForm.get('password')?.errors?.['required']"
+                >
+                  Senha é obrigatória
+                </span>
+                <span
+                  *ngIf="registerForm.get('password')?.errors?.['minlength']"
+                >
+                  Senha deve ter pelo menos 6 caracteres
+                </span>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="confirmPassword" class="form-label"
+                >Confirmar Senha</label
+              >
+              <input
+                type="password"
+                class="form-control"
+                id="confirmPassword"
+                formControlName="confirmPassword"
+                placeholder="Confirme sua senha"
+              />
+              <div
+                *ngIf="
+                  registerForm.get('confirmPassword')?.invalid &&
+                  registerForm.get('confirmPassword')?.touched
+                "
+                class="text-danger"
+              >
+                <span
+                  *ngIf="registerForm.get('confirmPassword')?.errors?.['required']"
+                >
+                  Confirmação de senha é obrigatória
+                </span>
+                <span
+                  *ngIf="registerForm.get('confirmPassword')?.errors?.['passwordMismatch']"
+                >
+                  As senhas não conferem
+                </span>
+              </div>
+            </div>
+
+            <div class="d-grid mb-3">
+              <button
+                type="submit"
+                class="btn btn-danger"
+                [disabled]="registerForm.invalid || isLoading"
+              >
+                <span
+                  *ngIf="isLoading"
+                  class="spinner-border spinner-border-sm me-2"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
+                {{ isLoading ? "Cadastrando..." : "Cadastrar" }}
+              </button>
+            </div>
+
+            <div class="text-center">
+              <p class="mb-0">
+                Já tem uma conta?
+                <a routerLink="/login" class="text-danger">Entrar</a>
+              </p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

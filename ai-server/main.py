@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 
@@ -8,7 +9,8 @@ from src.logging_config import configure_logging
 # Load environment variables
 load_dotenv()
 
-if __name__ == "__main__":
+
+async def main():
     # Configure logging
     log_level = os.environ.get("LOG_LEVEL", "INFO")
     configure_logging(log_level)
@@ -19,5 +21,10 @@ if __name__ == "__main__":
     # Get port from environment or use default
     port = int(os.environ.get("GRPC_PORT", 50051))
 
-    # Start gRPC server
-    serve(port=port)
+    # Start async gRPC server
+    await serve(port=port)
+
+
+if __name__ == "__main__":
+    # Run the async main function
+    asyncio.run(main())

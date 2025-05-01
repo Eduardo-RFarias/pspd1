@@ -1,0 +1,160 @@
+<div class="card shadow">
+  <div class="card-header bg-danger text-white">
+    <h4 class="mb-0">Informações do Paciente</h4>
+    <p class="mb-0">Por favor, preencha seus dados para continuar</p>
+  </div>
+  <div class="card-body">
+    <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
+      {{ errorMessage }}
+    </div>
+
+    <form [formGroup]="patientForm" (ngSubmit)="onSubmit()">
+      <div class="mb-3">
+        <label for="name" class="form-label">Nome Completo</label>
+        <input
+          type="text"
+          class="form-control"
+          id="name"
+          formControlName="name"
+          placeholder="Digite seu nome completo"
+        />
+        <div
+          *ngIf="
+            patientForm.get('name')?.invalid && patientForm.get('name')?.touched
+          "
+          class="text-danger"
+        >
+          <span *ngIf="patientForm.get('name')?.errors?.['required']">
+            Nome é obrigatório
+          </span>
+          <span *ngIf="patientForm.get('name')?.errors?.['minlength']">
+            Nome deve ter pelo menos 3 caracteres
+          </span>
+        </div>
+      </div>
+
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="age" class="form-label">Idade</label>
+          <input
+            type="number"
+            class="form-control"
+            id="age"
+            formControlName="age"
+            placeholder="Sua idade"
+            min="0"
+            max="120"
+          />
+          <div
+            *ngIf="
+              patientForm.get('age')?.invalid && patientForm.get('age')?.touched
+            "
+            class="text-danger"
+          >
+            <span *ngIf="patientForm.get('age')?.errors?.['required']">
+              Idade é obrigatória
+            </span>
+            <span
+              *ngIf="patientForm.get('age')?.errors?.['min'] || patientForm.get('age')?.errors?.['max']"
+            >
+              Idade deve estar entre 0 e 120 anos
+            </span>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <label for="gender" class="form-label">Gênero</label>
+          <select class="form-select" id="gender" formControlName="gender">
+            <option value="" disabled selected>Selecione o gênero</option>
+            <option *ngFor="let option of genderOptions" [value]="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+          <div
+            *ngIf="
+              patientForm.get('gender')?.invalid &&
+              patientForm.get('gender')?.touched
+            "
+            class="text-danger"
+          >
+            <span *ngIf="patientForm.get('gender')?.errors?.['required']">
+              Gênero é obrigatório
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label for="weight" class="form-label">Peso (kg)</label>
+          <input
+            type="number"
+            class="form-control"
+            id="weight"
+            formControlName="weight"
+            placeholder="Seu peso em kg"
+            step="0.1"
+            min="0.1"
+          />
+          <div
+            *ngIf="
+              patientForm.get('weight')?.invalid &&
+              patientForm.get('weight')?.touched
+            "
+            class="text-danger"
+          >
+            <span *ngIf="patientForm.get('weight')?.errors?.['required']">
+              Peso é obrigatório
+            </span>
+            <span *ngIf="patientForm.get('weight')?.errors?.['min']">
+              Peso deve ser maior que 0
+            </span>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <label for="height" class="form-label">Altura (m)</label>
+          <input
+            type="number"
+            class="form-control"
+            id="height"
+            formControlName="height"
+            placeholder="Sua altura em metros"
+            step="0.01"
+            min="0.1"
+          />
+          <div
+            *ngIf="
+              patientForm.get('height')?.invalid &&
+              patientForm.get('height')?.touched
+            "
+            class="text-danger"
+          >
+            <span *ngIf="patientForm.get('height')?.errors?.['required']">
+              Altura é obrigatória
+            </span>
+            <span *ngIf="patientForm.get('height')?.errors?.['min']">
+              Altura deve ser maior que 0
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-grid">
+        <button
+          type="submit"
+          class="btn btn-danger"
+          [disabled]="patientForm.invalid || isLoading"
+        >
+          <span
+            *ngIf="isLoading"
+            class="spinner-border spinner-border-sm me-2"
+            role="status"
+            aria-hidden="true"
+          ></span>
+          {{ isLoading ? "Salvando..." : "Salvar Informações" }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

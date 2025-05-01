@@ -1,7 +1,6 @@
+import asyncio
 import logging
 import signal
-import sys
-from concurrent import futures
 
 import grpc
 
@@ -17,7 +16,7 @@ class AiServicer(ai_server_pb2_grpc.AiServiceServicer):
         self.logger.info("Initializing AI Servicer")
         self.doctor_chat = DoctorChat()
 
-    def Diagnose(self, request, context):
+    async def Diagnose(self, request, context):
         try:
             client_ip = context.peer()
             self.logger.info(f"Received diagnosis request from {client_ip}")
@@ -35,8 +34,8 @@ class AiServicer(ai_server_pb2_grpc.AiServiceServicer):
             symptoms = request.symptoms
             self.logger.debug(f"Symptoms provided: {symptoms[:100]}...")
 
-            # Get the diagnosis
-            diagnosis = self.doctor_chat.diagnose(history, symptoms).output_text
+            # Get the diagnosis - now using await
+            diagnosis = (await self.doctor_chat.diagnose(history, symptoms)).output_text
             self.logger.info(f"Diagnosis generated successfully for client {client_ip}")
 
             # Create and return the response
@@ -49,35 +48,33 @@ class AiServicer(ai_server_pb2_grpc.AiServiceServicer):
             return ai_server_pb2.DiagnoseResponse(diagnosis="")
 
 
-def serve(port=50051):
+async def serve(port=50051):
     # Configure logging
     configure_logging()
 
     logger = logging.getLogger(__name__)
 
-    # Create the server
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    # Create the async server
+    server = grpc.aio.server()
     ai_server_pb2_grpc.add_AiServiceServicer_to_server(AiServicer(), server)
-    server.add_insecure_port(f"[::]:{port}")
+    server_address = f"[::]:{port}"
+    server.add_insecure_port(server_address)
 
     # Start the server
-    server.start()
-    logger.info(f"Server started, listening on port {port}")
+    await server.start()
+    logger.info(f"Async server started, listening on port {port}")
 
-    # Set up signal handlers for graceful shutdown
-    def handle_shutdown(signum, frame):
-        logger.info(f"Received shutdown signal: {signum}")
-        logger.info("Gracefully stopping server...")
-
-        # Stop the server gracefully
-        # Give 10 seconds for requests to complete
-        server.stop(10)
+    # Set up signal handling for graceful shutdown
+    async def shutdown():
+        logger.info("Shutting down server...")
+        # Let the server stop gracefully
+        await server.stop(10)
         logger.info("Server stopped")
-        sys.exit(0)
 
-    # Register signal handlers
-    signal.signal(signal.SIGINT, handle_shutdown)  # Ctrl+C
-    signal.signal(signal.SIGTERM, handle_shutdown)  # kill or systemd
+    # Add signal handlers
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        loop = asyncio.get_running_loop()
+        loop.add_signal_handler(sig, lambda: asyncio.create_task(shutdown()))
 
-    # Wait for termination
-    server.wait_for_termination()
+    # Wait until server is terminated
+    await server.wait_for_termination()
