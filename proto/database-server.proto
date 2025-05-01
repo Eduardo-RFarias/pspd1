@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package database;
+
+option go_package = "unb.br/web-server/src/proto";
+
+service DatabaseService {
+    rpc Login(LoginRequest) returns (LoginResponse) {}
+    rpc Register(RegisterRequest) returns (RegisterResponse) {}
+    rpc SavePatientInfo(SavePatientInfoRequest) returns (SavePatientInfoResponse) {}
+    rpc GetPatient(GetPatientRequest) returns (GetPatientResponse) {}
+}
+
+message LoginRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message LoginResponse {
+    string token = 1;
+}
+
+message RegisterRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message RegisterResponse {
+    string token = 1;
+}
+
+message SavePatientInfoRequest {
+    string token = 1;
+    PatientInfo patient_info = 2;
+}
+
+message SavePatientInfoResponse {
+    bool success = 1;
+}
+
+message GetPatientRequest {
+    string token = 1;
+}
+
+message GetPatientResponse {
+    PatientInfo patient_info = 1;
+}
+
+message PatientInfo {
+    string name = 1;
+    int32 age = 2;
+    string gender = 3;
+    float weight = 4;
+    float height = 5;
+}

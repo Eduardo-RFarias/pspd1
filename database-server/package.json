@@ -1,0 +1,25 @@
+{
+  "name": "database-server",
+  "version": "0.1.0",
+  "scripts": {
+    "start": "ts-node src/main.ts",
+    "reset": "prisma migrate reset",
+    "migrate": "prisma migrate dev"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.13.3",
+    "@grpc/proto-loader": "^0.7.15",
+    "@prisma/client": "^6.7.0",
+    "argon2": "^0.43.0",
+    "dotenv": "^16.5.0",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.9",
+    "grpc_tools_node_protoc_ts": "^5.3.3",
+    "grpc-tools": "^1.13.0",
+    "prisma": "^6.7.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}
