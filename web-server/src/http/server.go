@@ -26,13 +26,19 @@ type Server struct {
 
 // ChatRequest represents a chat request
 type ChatRequest struct {
-	Token    string `json:"token" binding:"required"`
-	Symptoms string `json:"symptoms" binding:"required"`
+	Token    string    `json:"token" binding:"required"`
+	Messages []Message `json:"messages" binding:"required"`
+}
+
+// Message represents a chat message
+type Message struct {
+	Role    string `json:"role" binding:"required"`
+	Content string `json:"content" binding:"required"`
 }
 
 // ChatResponse represents a chat response
 type ChatResponse struct {
-	Diagnosis string `json:"diagnosis"`
+	Content string `json:"content"`
 }
 
 // LoginRequest represents a login request
@@ -272,10 +278,15 @@ func (s *Server) handleChat(c *gin.Context) {
 		return
 	}
 
-	s.accessLogger.Printf("Chat request with symptoms: %s", req.Symptoms)
+	// Log the newest message (the last one in the array)
+	latestMessage := "No messages"
+	if len(req.Messages) > 0 {
+		latestMessage = req.Messages[len(req.Messages)-1].Content
+	}
+	s.accessLogger.Printf("Chat request with latest message: %s", latestMessage)
 
 	// Verify the token and get patient info
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*20)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
 	defer cancel()
 
 	getPatientInput := grpc.GetPatientInput{
@@ -289,28 +300,38 @@ func (s *Server) handleChat(c *gin.Context) {
 		return
 	}
 
-	// Now diagnose using the AI service
-	diagnosisInput := grpc.DiagnoseInput{
-		History: grpc.PatientHistory{
-			Name:   getPatientOutput.PatientInfo.Name,
-			Age:    getPatientOutput.PatientInfo.Age,
-			Gender: getPatientOutput.PatientInfo.Gender,
-			Weight: getPatientOutput.PatientInfo.Weight,
-			Height: getPatientOutput.PatientInfo.Height,
-		},
-		Symptoms: req.Symptoms,
+	// Convert HTTP messages to gRPC messages
+	grpcMessages := make([]grpc.Message, len(req.Messages))
+	for i, msg := range req.Messages {
+		grpcMessages[i] = grpc.Message{
+			Role:    msg.Role,
+			Content: msg.Content,
+		}
 	}
 
-	diagnosisOutput, err := s.aiClient.Diagnose(ctx, diagnosisInput)
-	if err != nil {
-		s.errorLogger.Printf("Diagnosis failed: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Diagnosis failed"})
+	// Now diagnose using the AI service with streaming
+	patientInfo := grpc.PatientInfo{
+		Name:   getPatientOutput.PatientInfo.Name,
+		Age:    getPatientOutput.PatientInfo.Age,
+		Gender: getPatientOutput.PatientInfo.Gender,
+		Weight: getPatientOutput.PatientInfo.Weight,
+		Height: getPatientOutput.PatientInfo.Height,
+	}
+
+	diagnosisInput := grpc.DiagnoseInput{
+		PatientInfo: patientInfo,
+		Messages:    grpcMessages,
+	}
+
+	// Stream the response directly to the client
+	if err := s.aiClient.StreamDiagnose(ctx, c, diagnosisInput); err != nil {
+		s.errorLogger.Printf("Diagnosis streaming failed: %v", err)
+		// If headers haven't been sent yet, return an error response
+		if !c.Writer.Written() {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Diagnosis failed"})
+		}
 		return
 	}
-
-	c.JSON(http.StatusOK, ChatResponse{
-		Diagnosis: diagnosisOutput.Diagnosis,
-	})
 }
 
 // handleGetPatient handles get patient requests

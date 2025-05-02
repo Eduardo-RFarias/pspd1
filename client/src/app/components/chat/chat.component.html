@@ -25,12 +25,13 @@
       </div>
     </div>
 
-    <ng-container *ngFor="let message of messages$ | async">
+    <ng-container *ngFor="let message of messages$ | async; let last = last">
       <div
         class="message"
         [ngClass]="{
           'user-message': message.role === 'user',
-          'assistant-message': message.role === 'assistant'
+          'assistant-message': message.role === 'assistant',
+          'streaming-message': message.role === 'assistant' && last && isLoading
         }"
       >
         <div class="message-content">
@@ -40,7 +41,13 @@
               'assistant-bubble': message.role === 'assistant'
             }"
           >
-            {{ message.content }}
+            <markdown [data]="message.content"></markdown>
+            <!-- Cursor indicator for streaming message -->
+            <span
+              class="cursor-indicator"
+              *ngIf="message.role === 'assistant' && last && isLoading"
+              >|</span
+            >
           </div>
           <div class="message-time">
             {{ formatDate(message.timestamp) }}
@@ -50,6 +57,7 @@
     </ng-container>
   </div>
 
+  <!-- Typing indicator now shown next to the last message -->
   <div class="typing-indicator" *ngIf="isLoading">
     <div class="typing-dot"></div>
     <div class="typing-dot"></div>

@@ -23,8 +23,8 @@ const (
 
 type DiagnoseRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	History       *History               `protobuf:"bytes,1,opt,name=history,proto3" json:"history,omitempty"`
-	Symptoms      string                 `protobuf:"bytes,2,opt,name=symptoms,proto3" json:"symptoms,omitempty"`
+	PatientInfo   *PatientInfoForPrompt  `protobuf:"bytes,1,opt,name=patient_info,json=patientInfo,proto3" json:"patient_info,omitempty"`
+	Messages      []*Message             `protobuf:"bytes,2,rep,name=messages,proto3" json:"messages,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -59,23 +59,23 @@ func (*DiagnoseRequest) Descriptor() ([]byte, []int) {
 	return file_ai_server_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *DiagnoseRequest) GetHistory() *History {
+func (x *DiagnoseRequest) GetPatientInfo() *PatientInfoForPrompt {
 	if x != nil {
-		return x.History
+		return x.PatientInfo
 	}
 	return nil
 }
 
-func (x *DiagnoseRequest) GetSymptoms() string {
+func (x *DiagnoseRequest) GetMessages() []*Message {
 	if x != nil {
-		return x.Symptoms
+		return x.Messages
 	}
-	return ""
+	return nil
 }
 
 type DiagnoseResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Diagnosis     string                 `protobuf:"bytes,1,opt,name=diagnosis,proto3" json:"diagnosis,omitempty"`
+	Content       string                 `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -110,14 +110,14 @@ func (*DiagnoseResponse) Descriptor() ([]byte, []int) {
 	return file_ai_server_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *DiagnoseResponse) GetDiagnosis() string {
+func (x *DiagnoseResponse) GetContent() string {
 	if x != nil {
-		return x.Diagnosis
+		return x.Content
 	}
 	return ""
 }
 
-type History struct {
+type PatientInfoForPrompt struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Age           int32                  `protobuf:"varint,2,opt,name=age,proto3" json:"age,omitempty"`
@@ -128,20 +128,20 @@ type History struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *History) Reset() {
-	*x = History{}
+func (x *PatientInfoForPrompt) Reset() {
+	*x = PatientInfoForPrompt{}
 	mi := &file_ai_server_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *History) String() string {
+func (x *PatientInfoForPrompt) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*History) ProtoMessage() {}
+func (*PatientInfoForPrompt) ProtoMessage() {}
 
-func (x *History) ProtoReflect() protoreflect.Message {
+func (x *PatientInfoForPrompt) ProtoReflect() protoreflect.Message {
 	mi := &file_ai_server_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -153,64 +153,119 @@ func (x *History) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use History.ProtoReflect.Descriptor instead.
-func (*History) Descriptor() ([]byte, []int) {
+// Deprecated: Use PatientInfoForPrompt.ProtoReflect.Descriptor instead.
+func (*PatientInfoForPrompt) Descriptor() ([]byte, []int) {
 	return file_ai_server_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *History) GetName() string {
+func (x *PatientInfoForPrompt) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-func (x *History) GetAge() int32 {
+func (x *PatientInfoForPrompt) GetAge() int32 {
 	if x != nil {
 		return x.Age
 	}
 	return 0
 }
 
-func (x *History) GetGender() string {
+func (x *PatientInfoForPrompt) GetGender() string {
 	if x != nil {
 		return x.Gender
 	}
 	return ""
 }
 
-func (x *History) GetWeight() float32 {
+func (x *PatientInfoForPrompt) GetWeight() float32 {
 	if x != nil {
 		return x.Weight
 	}
 	return 0
 }
 
-func (x *History) GetHeight() float32 {
+func (x *PatientInfoForPrompt) GetHeight() float32 {
 	if x != nil {
 		return x.Height
 	}
 	return 0
 }
 
+type Message struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Role          string                 `protobuf:"bytes,1,opt,name=role,proto3" json:"role,omitempty"`
+	Content       string                 `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Message) Reset() {
+	*x = Message{}
+	mi := &file_ai_server_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Message) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Message) ProtoMessage() {}
+
+func (x *Message) ProtoReflect() protoreflect.Message {
+	mi := &file_ai_server_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Message.ProtoReflect.Descriptor instead.
+func (*Message) Descriptor() ([]byte, []int) {
+	return file_ai_server_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *Message) GetRole() string {
+	if x != nil {
+		return x.Role
+	}
+	return ""
+}
+
+func (x *Message) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
 var File_ai_server_proto protoreflect.FileDescriptor
 
 const file_ai_server_proto_rawDesc = "" +
 	"\n" +
-	"\x0fai-server.proto\x12\x02ai\"T\n" +
-	"\x0fDiagnoseRequest\x12%\n" +
-	"\ahistory\x18\x01 \x01(\v2\v.ai.HistoryR\ahistory\x12\x1a\n" +
-	"\bsymptoms\x18\x02 \x01(\tR\bsymptoms\"0\n" +
-	"\x10DiagnoseResponse\x12\x1c\n" +
-	"\tdiagnosis\x18\x01 \x01(\tR\tdiagnosis\"w\n" +
-	"\aHistory\x12\x12\n" +
+	"\x0fai-server.proto\x12\x02ai\"w\n" +
+	"\x0fDiagnoseRequest\x12;\n" +
+	"\fpatient_info\x18\x01 \x01(\v2\x18.ai.PatientInfoForPromptR\vpatientInfo\x12'\n" +
+	"\bmessages\x18\x02 \x03(\v2\v.ai.MessageR\bmessages\",\n" +
+	"\x10DiagnoseResponse\x12\x18\n" +
+	"\acontent\x18\x01 \x01(\tR\acontent\"\x84\x01\n" +
+	"\x14PatientInfoForPrompt\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x10\n" +
 	"\x03age\x18\x02 \x01(\x05R\x03age\x12\x16\n" +
 	"\x06gender\x18\x03 \x01(\tR\x06gender\x12\x16\n" +
 	"\x06weight\x18\x04 \x01(\x02R\x06weight\x12\x16\n" +
-	"\x06height\x18\x05 \x01(\x02R\x06height2D\n" +
-	"\tAiService\x127\n" +
-	"\bDiagnose\x12\x13.ai.DiagnoseRequest\x1a\x14.ai.DiagnoseResponse\"\x00B\x1dZ\x1bunb.br/web-server/src/protob\x06proto3"
+	"\x06height\x18\x05 \x01(\x02R\x06height\"7\n" +
+	"\aMessage\x12\x12\n" +
+	"\x04role\x18\x01 \x01(\tR\x04role\x12\x18\n" +
+	"\acontent\x18\x02 \x01(\tR\acontent2F\n" +
+	"\tAiService\x129\n" +
+	"\bDiagnose\x12\x13.ai.DiagnoseRequest\x1a\x14.ai.DiagnoseResponse\"\x000\x01B\x1dZ\x1bunb.br/web-server/src/protob\x06proto3"
 
 var (
 	file_ai_server_proto_rawDescOnce sync.Once
@@ -224,21 +279,23 @@ func file_ai_server_proto_rawDescGZIP() []byte {
 	return file_ai_server_proto_rawDescData
 }
 
-var file_ai_server_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_ai_server_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_ai_server_proto_goTypes = []any{
-	(*DiagnoseRequest)(nil),  // 0: ai.DiagnoseRequest
-	(*DiagnoseResponse)(nil), // 1: ai.DiagnoseResponse
-	(*History)(nil),          // 2: ai.History
+	(*DiagnoseRequest)(nil),      // 0: ai.DiagnoseRequest
+	(*DiagnoseResponse)(nil),     // 1: ai.DiagnoseResponse
+	(*PatientInfoForPrompt)(nil), // 2: ai.PatientInfoForPrompt
+	(*Message)(nil),              // 3: ai.Message
 }
 var file_ai_server_proto_depIdxs = []int32{
-	2, // 0: ai.DiagnoseRequest.history:type_name -> ai.History
-	0, // 1: ai.AiService.Diagnose:input_type -> ai.DiagnoseRequest
-	1, // 2: ai.AiService.Diagnose:output_type -> ai.DiagnoseResponse
-	2, // [2:3] is the sub-list for method output_type
-	1, // [1:2] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	2, // 0: ai.DiagnoseRequest.patient_info:type_name -> ai.PatientInfoForPrompt
+	3, // 1: ai.DiagnoseRequest.messages:type_name -> ai.Message
+	0, // 2: ai.AiService.Diagnose:input_type -> ai.DiagnoseRequest
+	1, // 3: ai.AiService.Diagnose:output_type -> ai.DiagnoseResponse
+	3, // [3:4] is the sub-list for method output_type
+	2, // [2:3] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_ai_server_proto_init() }
@@ -252,7 +309,7 @@ func file_ai_server_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_ai_server_proto_rawDesc), len(file_ai_server_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -26,7 +26,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AiServiceClient interface {
-	Diagnose(ctx context.Context, in *DiagnoseRequest, opts ...grpc.CallOption) (*DiagnoseResponse, error)
+	Diagnose(ctx context.Context, in *DiagnoseRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[DiagnoseResponse], error)
 }
 
 type aiServiceClient struct {
@@ -37,21 +37,30 @@ func NewAiServiceClient(cc grpc.ClientConnInterface) AiServiceClient {
 	return &aiServiceClient{cc}
 }
 
-func (c *aiServiceClient) Diagnose(ctx context.Context, in *DiagnoseRequest, opts ...grpc.CallOption) (*DiagnoseResponse, error) {
+func (c *aiServiceClient) Diagnose(ctx context.Context, in *DiagnoseRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[DiagnoseResponse], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(DiagnoseResponse)
-	err := c.cc.Invoke(ctx, AiService_Diagnose_FullMethodName, in, out, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &AiService_ServiceDesc.Streams[0], AiService_Diagnose_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &grpc.GenericClientStream[DiagnoseRequest, DiagnoseResponse]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
 }
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type AiService_DiagnoseClient = grpc.ServerStreamingClient[DiagnoseResponse]
 
 // AiServiceServer is the server API for AiService service.
 // All implementations must embed UnimplementedAiServiceServer
 // for forward compatibility.
 type AiServiceServer interface {
-	Diagnose(context.Context, *DiagnoseRequest) (*DiagnoseResponse, error)
+	Diagnose(*DiagnoseRequest, grpc.ServerStreamingServer[DiagnoseResponse]) error
 	mustEmbedUnimplementedAiServiceServer()
 }
 
@@ -62,8 +71,8 @@ type AiServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedAiServiceServer struct{}
 
-func (UnimplementedAiServiceServer) Diagnose(context.Context, *DiagnoseRequest) (*DiagnoseResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Diagnose not implemented")
+func (UnimplementedAiServiceServer) Diagnose(*DiagnoseRequest, grpc.ServerStreamingServer[DiagnoseResponse]) error {
+	return status.Errorf(codes.Unimplemented, "method Diagnose not implemented")
 }
 func (UnimplementedAiServiceServer) mustEmbedUnimplementedAiServiceServer() {}
 func (UnimplementedAiServiceServer) testEmbeddedByValue()                   {}
@@ -86,23 +95,16 @@ func RegisterAiServiceServer(s grpc.ServiceRegistrar, srv AiServiceServer) {
 	s.RegisterService(&AiService_ServiceDesc, srv)
 }
 
-func _AiService_Diagnose_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DiagnoseRequest)
-	if err := dec(in); err != nil {
-		return nil, err
+func _AiService_Diagnose_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(DiagnoseRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return srv.(AiServiceServer).Diagnose(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: AiService_Diagnose_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AiServiceServer).Diagnose(ctx, req.(*DiagnoseRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(AiServiceServer).Diagnose(m, &grpc.GenericServerStream[DiagnoseRequest, DiagnoseResponse]{ServerStream: stream})
 }
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type AiService_DiagnoseServer = grpc.ServerStreamingServer[DiagnoseResponse]
 
 // AiService_ServiceDesc is the grpc.ServiceDesc for AiService service.
 // It's only intended for direct use with grpc.RegisterService,
@@ -110,12 +112,13 @@ func _AiService_Diagnose_Handler(srv interface{}, ctx context.Context, dec func(
 var AiService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "ai.AiService",
 	HandlerType: (*AiServiceServer)(nil),
-	Methods: []grpc.MethodDesc{
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
 		{
-			MethodName: "Diagnose",
-			Handler:    _AiService_Diagnose_Handler,
+			StreamName:    "Diagnose",
+			Handler:       _AiService_Diagnose_Handler,
+			ServerStreams: true,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
 	Metadata: "ai-server.proto",
 }

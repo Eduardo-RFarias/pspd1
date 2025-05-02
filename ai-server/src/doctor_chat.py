@@ -1,7 +1,21 @@
 import logging
+from typing import AsyncGenerator, Literal
 
 from openai import AsyncOpenAI
-from openai.types.responses import Response
+from pydantic import BaseModel
+
+
+class PatientInfo(BaseModel):
+    name: str
+    age: int
+    gender: str
+    weight: float
+    height: float
+
+
+class Message(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
 
 
 class DoctorChat:
@@ -15,38 +29,46 @@ class DoctorChat:
 
             Você deve retornar um diagnóstico baseado nas informações recebidas.
 
-            Suas respostas devem ser sempre em português brasileiro, em texto
-            simples, sem formatação HTML ou Markdown.
+            Suas respostas devem ser sempre em português brasileiro, em formato markdown.
 
             Não alucine, apenas use as informações recebidas para retornar um
             diagnóstico. Caso não seja possível retornar um diagnóstico, responda
             que não há como determinar o diagnóstico.
 
             Informações do paciente:
-            {history}
+                - Nome: {name}
+                - Idade: {age}
+                - Sexo: {gender}
+                - Peso: {weight}kg
+                - Altura: {height}cm
         """
 
-        self.model = "gpt-4o"
+        self.model = "gpt-4.1"
         self.temperature = 0.2
         self.logger.info(f"DoctorChat initialized with model: {self.model}")
 
-    async def diagnose(self, history: str, symptoms: str) -> Response:
-        self.logger.info(
-            f"Processing diagnosis request with symptoms length: {len(symptoms)}"
-        )
+    async def diagnose(self, patient_info: PatientInfo, messages: list[Message]) -> AsyncGenerator[str, None]:
+        self.logger.info(f"Processing diagnosis request with messages length: {len(messages)}")
+
+        system_prompt = {"role": "developer", "content": self.system_prompt.format(**patient_info.model_dump())}
+        self.logger.debug(f"System prompt: {system_prompt}")
+
+        dict_messages = [{"role": message.role, "content": message.content} for message in messages]
+        self.logger.debug(f"Messages: {dict_messages}")
 
         try:
-            response = await self.client.responses.create(
+            response = await self.client.chat.completions.create(
                 model=self.model,
-                instructions=self.system_prompt.format(history=history),
-                input=symptoms,
+                messages=[system_prompt, *dict_messages],  # type: ignore
                 temperature=self.temperature,
+                stream=True,
             )
 
-            self.logger.info(
-                f"Diagnosis generated successfully. Response ID: {response.id}"
-            )
-            return response
+            async for chunk in response:
+                delta = chunk.choices[0].delta.content
+
+                if delta is not None:
+                    yield delta
 
         except Exception as e:
             self.logger.error(f"Error generating diagnosis: {str(e)}")

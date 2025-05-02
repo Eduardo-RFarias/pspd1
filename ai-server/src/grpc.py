@@ -4,7 +4,7 @@ import signal
 
 import grpc
 
-from src.doctor_chat import DoctorChat
+from src.doctor_chat import DoctorChat, Message, PatientInfo
 from src.logging_config import configure_logging
 
 from .proto import ai_server_pb2, ai_server_pb2_grpc
@@ -21,31 +21,30 @@ class AiServicer(ai_server_pb2_grpc.AiServiceServicer):
             client_ip = context.peer()
             self.logger.info(f"Received diagnosis request from {client_ip}")
 
-            # Format history from the request
-            history_obj = request.history
-            history = f"""
-                Nome: {history_obj.name}
-                Idade: {history_obj.age}
-                Sexo: {history_obj.gender}
-                Peso: {history_obj.weight}kg
-                Altura: {history_obj.height}cm
-            """
+            # Convert proto PatientInfo to our PatientInfo model
+            patient_info = PatientInfo(
+                name=request.patient_info.name,
+                age=request.patient_info.age,
+                gender=request.patient_info.gender,
+                weight=request.patient_info.weight,
+                height=request.patient_info.height,
+            )
 
-            symptoms = request.symptoms
-            self.logger.debug(f"Symptoms provided: {symptoms[:100]}...")
+            # Convert proto Messages to our Message model
+            messages = [Message(role=msg.role, content=msg.content) for msg in request.messages]
 
-            # Get the diagnosis - now using await
-            diagnosis = (await self.doctor_chat.diagnose(history, symptoms)).output_text
-            self.logger.info(f"Diagnosis generated successfully for client {client_ip}")
+            self.logger.debug(f"Received {len(messages)} messages")
 
-            # Create and return the response
-            return ai_server_pb2.DiagnoseResponse(diagnosis=diagnosis)
+            # Stream the diagnosis response
+            async for content_chunk in self.doctor_chat.diagnose(patient_info, messages):
+                yield ai_server_pb2.DiagnoseResponse(content=content_chunk)
+
+            self.logger.info(f"Diagnosis stream completed for client {client_ip}")
 
         except Exception as e:
             self.logger.error(f"Error in Diagnose method: {str(e)}", exc_info=True)
             context.set_code(grpc.StatusCode.INTERNAL)
             context.set_details(f"Internal server error occurred: {str(e)}")
-            return ai_server_pb2.DiagnoseResponse(diagnosis="")
 
 
 async def serve(port=50051):

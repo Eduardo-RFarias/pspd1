@@ -4,5 +4,6 @@
         "source.fixAll": "explicit",
         "source.organizeImports": "explicit"
     },
-    "cSpell.language": "en,pt,pt-BR"
+    "cSpell.language": "en,pt,pt-BR",
+    "ruff.lineLength": 140
 }

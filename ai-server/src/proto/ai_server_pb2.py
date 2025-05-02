@@ -11,16 +11,14 @@ from google.protobuf import runtime_version as _runtime_version
 from google.protobuf import symbol_database as _symbol_database
 from google.protobuf.internal import builder as _builder
 
-_runtime_version.ValidateProtobufRuntimeVersion(
-    _runtime_version.Domain.PUBLIC, 5, 29, 0, "", "ai-server.proto"
-)
+_runtime_version.ValidateProtobufRuntimeVersion(_runtime_version.Domain.PUBLIC, 5, 29, 0, "", "ai-server.proto")
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
 
 
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(
-    b'\n\x0f\x61i-server.proto\x12\x02\x61i"A\n\x0f\x44iagnoseRequest\x12\x1c\n\x07history\x18\x01 \x01(\x0b\x32\x0b.ai.History\x12\x10\n\x08symptoms\x18\x02 \x01(\t"%\n\x10\x44iagnoseResponse\x12\x11\n\tdiagnosis\x18\x01 \x01(\t"T\n\x07History\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0b\n\x03\x61ge\x18\x02 \x01(\x05\x12\x0e\n\x06gender\x18\x03 \x01(\t\x12\x0e\n\x06weight\x18\x04 \x01(\x02\x12\x0e\n\x06height\x18\x05 \x01(\x02\x32\x44\n\tAiService\x12\x37\n\x08\x44iagnose\x12\x13.ai.DiagnoseRequest\x1a\x14.ai.DiagnoseResponse"\x00\x42\x19Z\x17unb.br/web-server/protob\x06proto3'
+    b'\n\x0f\x61i-server.proto\x12\x02\x61i"`\n\x0f\x44iagnoseRequest\x12.\n\x0cpatient_info\x18\x01 \x01(\x0b\x32\x18.ai.PatientInfoForPrompt\x12\x1d\n\x08messages\x18\x02 \x03(\x0b\x32\x0b.ai.Message"#\n\x10\x44iagnoseResponse\x12\x0f\n\x07\x63ontent\x18\x01 \x01(\t"a\n\x14PatientInfoForPrompt\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0b\n\x03\x61ge\x18\x02 \x01(\x05\x12\x0e\n\x06gender\x18\x03 \x01(\t\x12\x0e\n\x06weight\x18\x04 \x01(\x02\x12\x0e\n\x06height\x18\x05 \x01(\x02"(\n\x07Message\x12\x0c\n\x04role\x18\x01 \x01(\t\x12\x0f\n\x07\x63ontent\x18\x02 \x01(\t2F\n\tAiService\x12\x39\n\x08\x44iagnose\x12\x13.ai.DiagnoseRequest\x1a\x14.ai.DiagnoseResponse"\x00\x30\x01\x42\x1dZ\x1bunb.br/web-server/src/protob\x06proto3'
 )
 
 _globals = globals()
@@ -28,13 +26,15 @@ _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, "ai_server_pb2", _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
     _globals["DESCRIPTOR"]._loaded_options = None
-    _globals["DESCRIPTOR"]._serialized_options = b"Z\027unb.br/web-server/proto"
+    _globals["DESCRIPTOR"]._serialized_options = b"Z\033unb.br/web-server/src/proto"
     _globals["_DIAGNOSEREQUEST"]._serialized_start = 23
-    _globals["_DIAGNOSEREQUEST"]._serialized_end = 88
-    _globals["_DIAGNOSERESPONSE"]._serialized_start = 90
-    _globals["_DIAGNOSERESPONSE"]._serialized_end = 127
-    _globals["_HISTORY"]._serialized_start = 129
-    _globals["_HISTORY"]._serialized_end = 213
-    _globals["_AISERVICE"]._serialized_start = 215
-    _globals["_AISERVICE"]._serialized_end = 283
+    _globals["_DIAGNOSEREQUEST"]._serialized_end = 119
+    _globals["_DIAGNOSERESPONSE"]._serialized_start = 121
+    _globals["_DIAGNOSERESPONSE"]._serialized_end = 156
+    _globals["_PATIENTINFOFORPROMPT"]._serialized_start = 158
+    _globals["_PATIENTINFOFORPROMPT"]._serialized_end = 255
+    _globals["_MESSAGE"]._serialized_start = 257
+    _globals["_MESSAGE"]._serialized_end = 297
+    _globals["_AISERVICE"]._serialized_start = 299
+    _globals["_AISERVICE"]._serialized_end = 369
 # @@protoc_insertion_point(module_scope)

@@ -5,22 +5,27 @@ package ai;
 option go_package = "unb.br/web-server/src/proto";
 
 service AiService{
-    rpc Diagnose(DiagnoseRequest) returns (DiagnoseResponse) {}
+    rpc Diagnose(DiagnoseRequest) returns (stream DiagnoseResponse) {}
 }
 
 message DiagnoseRequest {
-    History history = 1;
-    string symptoms = 2;
+    PatientInfoForPrompt patient_info = 1;
+    repeated Message messages = 2;
 }
 
 message DiagnoseResponse {
-    string diagnosis = 1;
+    string content = 1;
 }
 
-message History {
+message PatientInfoForPrompt {
     string name = 1;
     int32 age = 2;
     string gender = 3;
     float weight = 4;
     float height = 5;
+}
+
+message Message {
+    string role = 1;
+    string content = 2;
 }

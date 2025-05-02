@@ -2,16 +2,18 @@ package grpc
 
 import (
 	"context"
+	"io"
 	"log"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	pb "unb.br/web-server/src/proto"
 )
 
-// PatientHistory represents the medical history of a patient
-type PatientHistory struct {
+// PatientInfo represents the patient information
+type PatientInfoForPrompt struct {
 	Name   string
 	Age    int32
 	Gender string
@@ -19,15 +21,16 @@ type PatientHistory struct {
 	Height float32
 }
 
-// DiagnoseInput represents the input for the Diagnose method
-type DiagnoseInput struct {
-	History  PatientHistory
-	Symptoms string
+// Message represents a chat message between user and assistant
+type Message struct {
+	Role    string
+	Content string
 }
 
-// DiagnoseOutput represents the output from the Diagnose method
-type DiagnoseOutput struct {
-	Diagnosis string
+// DiagnoseInput represents the input for the Diagnose method
+type DiagnoseInput struct {
+	PatientInfo PatientInfo
+	Messages    []Message
 }
 
 // AiClient handles the communication with the AI gRPC server
@@ -57,36 +60,73 @@ func (c *AiClient) Close() error {
 	return c.conn.Close()
 }
 
-// Diagnose sends a diagnosis request to the AI server
-func (c *AiClient) Diagnose(ctx context.Context, input DiagnoseInput) (*DiagnoseOutput, error) {
+// StreamDiagnose streams a diagnosis response to the Gin context
+func (c *AiClient) StreamDiagnose(ctx context.Context, ginCtx *gin.Context, input DiagnoseInput) error {
 	// Create a context with timeout if none was provided
 	if ctx == nil {
 		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(context.Background(), time.Second*10)
+		ctx, cancel = context.WithTimeout(context.Background(), time.Minute*5)
 		defer cancel()
 	}
 
-	// Convert the input to the protobuf format
+	// Convert the patient info to protobuf format
+	patientInfo := &pb.PatientInfoForPrompt{
+		Name:   input.PatientInfo.Name,
+		Age:    input.PatientInfo.Age,
+		Gender: input.PatientInfo.Gender,
+		Weight: input.PatientInfo.Weight,
+		Height: input.PatientInfo.Height,
+	}
+
+	// Convert the messages to protobuf format
+	pbMessages := make([]*pb.Message, len(input.Messages))
+	for i, msg := range input.Messages {
+		pbMessages[i] = &pb.Message{
+			Role:    msg.Role,
+			Content: msg.Content,
+		}
+	}
+
+	// Create the request
 	req := &pb.DiagnoseRequest{
-		History: &pb.History{
-			Name:   input.History.Name,
-			Age:    input.History.Age,
-			Gender: input.History.Gender,
-			Weight: input.History.Weight,
-			Height: input.History.Height,
-		},
-		Symptoms: input.Symptoms,
+		PatientInfo: patientInfo,
+		Messages:    pbMessages,
 	}
 
-	// Send the request to the server
-	resp, err := c.client.Diagnose(ctx, req)
+	// Configure gin to stream the response
+	ginCtx.Header("Content-Type", "text/plain")
+	ginCtx.Header("X-Content-Type-Options", "nosniff")
+	ginCtx.Status(200)
+
+	// Stream the response
+	stream, err := c.client.Diagnose(ctx, req)
 	if err != nil {
-		log.Printf("Failed to diagnose: %v", err)
-		return nil, err
+		log.Printf("Failed to start diagnosis stream: %v", err)
+		return err
 	}
 
-	// Convert the response to the output format
-	return &DiagnoseOutput{
-		Diagnosis: resp.Diagnosis,
-	}, nil
+	// Read from the stream and write to the response
+	for {
+		resp, err := stream.Recv()
+		if err == io.EOF {
+			// End of stream
+			break
+		}
+		if err != nil {
+			log.Printf("Error receiving from stream: %v", err)
+			return err
+		}
+
+		// Write the content chunk to the response
+		_, err = ginCtx.Writer.Write([]byte(resp.Content))
+		if err != nil {
+			log.Printf("Error writing to response: %v", err)
+			return err
+		}
+
+		// Flush to ensure the client receives data immediately
+		ginCtx.Writer.Flush()
+	}
+
+	return nil
 }

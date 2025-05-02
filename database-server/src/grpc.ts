@@ -62,7 +62,6 @@ export default class DatabaseServiceImpl implements IDatabaseServiceServer {
       }
 
       const token = sign({}, process.env.JWT_SECRET!, {
-        expiresIn: "1H",
         subject: user.id.toString(),
         audience: "database-server",
         issuer: "database-server",
@@ -108,7 +107,6 @@ export default class DatabaseServiceImpl implements IDatabaseServiceServer {
       });
 
       const token = sign({}, process.env.JWT_SECRET!, {
-        expiresIn: "1H",
         subject: newUser.id.toString(),
         audience: "database-server",
         issuer: "database-server",

@@ -3,6 +3,7 @@ import {
   AfterViewChecked,
   Component,
   ElementRef,
+  OnDestroy,
   OnInit,
   ViewChild,
 } from '@angular/core';
@@ -13,24 +14,26 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { MarkdownModule } from 'ngx-markdown';
+import { Observable, Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { ChatMessage, ChatService } from '../../services/chat.service';
 
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, MarkdownModule],
   templateUrl: './chat.component.html',
   styleUrl: './chat.component.scss',
 })
-export class ChatComponent implements OnInit, AfterViewChecked {
+export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   @ViewChild('chatContainer') private chatContainer!: ElementRef;
 
   messageForm!: FormGroup;
   messages$!: Observable<ChatMessage[]>;
   isLoading = false;
   error = '';
+  private subscription = new Subscription();
 
   constructor(
     private fb: FormBuilder,
@@ -51,6 +54,10 @@ export class ChatComponent implements OnInit, AfterViewChecked {
     this.scrollToBottom();
   }
 
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
+  }
+
   sendMessage(): void {
     if (this.messageForm.valid && !this.isLoading) {
       this.isLoading = true;
@@ -61,12 +68,9 @@ export class ChatComponent implements OnInit, AfterViewChecked {
 
       const message = this.messageForm.getRawValue().message;
 
-      this.chatService.sendMessage(message).subscribe({
+      const messageSub = this.chatService.sendMessage(message).subscribe({
         next: () => {
-          this.isLoading = false;
-          // Re-enable the control and reset it
-          this.messageForm.get('message')?.enable();
-          this.messageForm.get('message')?.reset();
+          // Não faz nada aqui, pois a resposta está sendo processada em streaming
         },
         error: (error) => {
           this.isLoading = false;
@@ -89,7 +93,17 @@ export class ChatComponent implements OnInit, AfterViewChecked {
             this.error = 'Ocorreu um erro. Por favor, tente novamente.';
           }
         },
+        complete: () => {
+          // Streaming finalizado
+          this.isLoading = false;
+          // Re-enable the control and reset it
+          this.messageForm.get('message')?.enable();
+          this.messageForm.get('message')?.reset();
+          this.scrollToBottom();
+        },
       });
+
+      this.subscription.add(messageSub);
     }
   }
 
