@@ -7,14 +7,21 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/joho/godotenv"
 	"unb.br/web-server/src/http"
 )
 
 func main() {
-	// Define server addresses
-	aiServerAddr := "localhost:50051"
-	dbServerAddr := "localhost:50052"
-	httpServerAddr := ":8080"
+	// Load .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	// Get server addresses from environment variables with defaults
+	aiServerAddr := getEnv("AI_SERVER_ADDR", "localhost:50051")
+	dbServerAddr := getEnv("DB_SERVER_ADDR", "localhost:50052")
+	httpServerAddr := getEnv("HTTP_SERVER_ADDR", ":8080")
 
 	// Print startup message
 	fmt.Println("=== Medical Diagnosis Web Server ===")
@@ -43,4 +50,13 @@ func main() {
 	// Close server connections
 	server.Close()
 	fmt.Println("Server shutdown complete")
+}
+
+// getEnv gets an environment variable or returns a default value
+func getEnv(key, defaultValue string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
+	}
+	return value
 }
